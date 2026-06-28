@@ -24,7 +24,7 @@ export function AppShell({ children }: PropsWithChildren) {
           </div>
           <div>
             <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500">pyanPM</p>
-            <h1 className="text-sm font-semibold text-zinc-100">Manager</h1>
+            <h1 className="text-sm font-semibold text-zinc-100">Companion</h1>
           </div>
         </div>
 

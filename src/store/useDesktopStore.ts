@@ -71,7 +71,7 @@ export const useDesktopStore = create<DesktopStore>((set, get) => ({
   activityRecords: [],
   cacheEntries: [],
   selectedPluginName: null,
-  activity: [buildActivity("pyanPM ready", "Ready.", "info")],
+  activity: [buildActivity("pyanPM Companion ready", "Ready.", "info")],
   errorMessage: null,
   busy: {
     bootstrap: false,

@@ -3,6 +3,7 @@ dist/
 coverage/
 .vite/
 target/
+.dist/
 
 # Tauri build output
 src-tauri/target/

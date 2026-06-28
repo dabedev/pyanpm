@@ -26,5 +26,5 @@ thiserror = "2"
 toml = "0.8"
 uuid = { version = "1", features = ["serde", "v4"] }
 walkdir = "2"
-tauri = { version = "2", features = [] }
-tauri-build = { version = "2", features = [] }
+tauri = { version = "=2.10.3", features = [] }
+tauri-build = { version = "=2.5.6", features = [] }

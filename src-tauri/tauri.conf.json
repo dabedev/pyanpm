@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "pyanPM",
+  "productName": "pyanPM Companion",
   "version": "0.1.0",
   "identifier": "dev.bblocks.pyanpm.desktop",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "pyanPM",
+        "title": "pyanPM Companion",
         "width": 1420,
         "height": 920,
         "minWidth": 1100,
@@ -26,7 +26,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["nsis"],
     "icon": []
   }
 }

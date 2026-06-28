@@ -42,7 +42,8 @@ export function OverviewPage() {
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500">Overview</p>
-          <h1 className="mt-2 text-2xl font-semibold text-zinc-100">pyanPM</h1>
+          <h1 className="mt-2 text-2xl font-semibold text-zinc-100">pyanPM Companion</h1>
+          <p className="mt-2 text-sm text-zinc-400">Optional desktop companion for the `pyanpm` CLI.</p>
         </div>
         <div className="flex items-center gap-2">
           <StatusBadge tone={healthy ? "ok" : "warn"}>{healthy ? "Healthy" : "Attention needed"}</StatusBadge>

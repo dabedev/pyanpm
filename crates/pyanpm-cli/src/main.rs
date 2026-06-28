@@ -1,4 +1,4 @@
-¶mod cli;
+mod cli;
 mod output;
 mod run;
 

@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.9.0
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install desktop dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test core
+        run: cargo test -p pyanpm-core
+
+      - name: Check workspace
+        run: cargo check --workspace
+
+      - name: Build CLI
+        run: cargo build --release -p pyanpm-cli
+
+      - name: Check desktop
+        run: pnpm run check
+
+      - name: Test desktop
+        run: pnpm run test
+
+      - name: Build desktop web app
+        run: pnpm run build
+
+      - name: Build Companion
+        run: pnpm run build:companion

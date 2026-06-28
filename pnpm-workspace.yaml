@@ -1,0 +1,12 @@
+packages:
+  - .
+
+allowBuilds:
+  esbuild: true
+
+publicHoistPattern:
+  - "@tauri-apps/cli*"
+
+nodeLinker: hoisted
+minimumReleaseAge: 10080
+confirmModulesPurge: false
