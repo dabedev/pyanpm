@@ -1,0 +1,15 @@
+[package]
+name = "pyanpm-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "pyanpm"
+path = "src/main.rs"
+
+[dependencies]
+clap.workspace = true
+pyanpm-core = { path = "../pyanpm-core" }
+serde.workspace = true
+serde_json.workspace = true

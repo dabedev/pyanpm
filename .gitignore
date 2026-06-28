@@ -1,0 +1,23 @@
+node_modules/
+dist/
+coverage/
+.vite/
+target/
+
+# Tauri build output
+src-tauri/target/
+
+# Local editor and tooling state
+.trae/
+.idea/
+.vscode/
+
+# Environment and logs
+.env
+.env.*
+*.log
+pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
