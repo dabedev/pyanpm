@@ -13,6 +13,9 @@ pyanpm-core = { path = "../crates/pyanpm-core" }
 serde.workspace = true
 serde_json.workspace = true
 tauri.workspace = true
+# Pin Tauri runtime crates to the API level expected by tauri 2.10.3.
+tauri-runtime.workspace = true
+tauri-runtime-wry.workspace = true
 tauri-plugin-dialog = "2"
 tauri-plugin-notification = "2"
 toml.workspace = true
