@@ -1,8 +1,11 @@
 {
   "name": "pyanpm",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1-a",
   "type": "module",
+  "engines": {
+    "node": "24.x"
+  },
   "packageManager": "pnpm@11.9.0",
   "scripts": {
     "dev": "vite --port 1420 --strictPort",

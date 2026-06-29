@@ -2,6 +2,11 @@ name: Release
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to publish, for example v0.1.0
+        required: true
+        type: string
   push:
     tags:
       - "v*"
@@ -16,6 +21,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -29,8 +36,49 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
+
+      - name: Resolve release tag
+        id: release_tag
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "push") {
+            $tag = "${{ github.ref_name }}"
+          } else {
+            $tag = "${{ inputs.tag }}".Trim()
+          }
+
+          if (-not $tag) {
+            throw "A release tag is required."
+          }
+
+          if (-not $tag.StartsWith("v")) {
+            throw "Release tag must start with 'v'."
+          }
+
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+
+      - name: Validate tag against Cargo version
+        id: release_version
+        shell: pwsh
+        run: |
+          $cargoToml = Get-Content -Path "Cargo.toml" -Raw
+          $match = [regex]::Match($cargoToml, '(?ms)^\[workspace\.package\].*?^version\s*=\s*"([^"]+)"')
+
+          if (-not $match.Success) {
+            throw "Could not find workspace.package version in Cargo.toml."
+          }
+
+          $version = $match.Groups[1].Value
+          $expectedTag = "v$version"
+          $actualTag = "${{ steps.release_tag.outputs.tag }}"
+
+          if ($actualTag -ne $expectedTag) {
+            throw "Release tag '$actualTag' does not match Cargo workspace version '$version'. Expected tag: '$expectedTag'."
+          }
+
+          "version=$version" >> $env:GITHUB_OUTPUT
 
       - name: Install desktop dependencies
         run: pnpm install --frozen-lockfile
@@ -55,7 +103,10 @@ jobs:
           if-no-files-found: error
 
       - name: Publish GitHub release assets
-        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.release_tag.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: v${{ steps.release_version.outputs.version }}
+          generate_release_notes: true
           files: .dist/releases/*
