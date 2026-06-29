@@ -13,8 +13,8 @@ The GitHub Actions `Release` workflow:
 5. Builds the CLI and the NSIS desktop installer.
 6. Authenticode-signs the Windows `.exe` files in CI.
 7. Packages release assets.
-8. Generates `SHA256SUMS.txt`, `RELEASE-METADATA.txt`, and `RELEASE_NOTES.md`.
-9. Publishes a GitHub Release and uploads the assets automatically.
+8. Generates `SHA256SUMS.txt` and the GitHub Release description.
+9. Publishes a GitHub Release and uploads only the intended release assets automatically.
 
 ## Required GitHub Secrets
 
@@ -87,10 +87,8 @@ Each GitHub Release publishes these files:
 - `pyanpm-companion-windows-x64-v<version>-setup.exe`
 - `pyanpm-bundled-windows-x64-v<version>.zip`
 - `SHA256SUMS.txt`
-- `RELEASE-METADATA.txt`
-- `RELEASE_NOTES.md`
 
-`RELEASE-METADATA.txt` includes the exact commit SHA used for the build.
+The release description shown on GitHub is generated from `RELEASE_NOTES.md` content during CI, but `RELEASE_NOTES.md` is not uploaded as a downloadable asset.
 
 ## Verify A Download On Windows
 

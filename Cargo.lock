@@ -2867,7 +2867,7 @@ dependencies = [
 
 [[package]]
 name = "pyanpm-app"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "directories",
  "pyanpm-core",
@@ -2884,7 +2884,7 @@ dependencies = [
 
 [[package]]
 name = "pyanpm-cli"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "clap",
  "pyanpm-core",
@@ -2894,7 +2894,7 @@ dependencies = [
 
 [[package]]
 name = "pyanpm-core"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "chrono",
  "directories",

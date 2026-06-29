@@ -125,13 +125,6 @@ if (Test-Path $bundleArchive) {
 }
 Compress-Archive -Path (Join-Path $bundleStage "*") -DestinationPath $bundleArchive
 
-$releaseMetadataPath = Join-Path $OutputDir "RELEASE-METADATA.txt"
-@"
-version=$version
-commit_sha=$CommitSha
-generated_at_utc=$([DateTime]::UtcNow.ToString("o"))
-"@ | Set-Content -Path $releaseMetadataPath
-
 $shaManifestPath = Join-Path $OutputDir "SHA256SUMS.txt"
 Write-Sha256Manifest -ArtifactDir $OutputDir -ManifestPath $shaManifestPath
 
@@ -140,5 +133,4 @@ Remove-Item -Path $tempRoot -Recurse -Force
 Write-Host "CLI artifact: $cliArchive"
 Write-Host "Companion artifact: $companionArtifact"
 Write-Host "Bundled artifact: $bundleArchive"
-Write-Host "Release metadata: $releaseMetadataPath"
 Write-Host "SHA256 manifest: $shaManifestPath"

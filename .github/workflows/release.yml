@@ -175,13 +175,18 @@ jobs:
           powershell -ExecutionPolicy Bypass -File ./scripts/release/New-Release-Notes.ps1 `
             -Version "${{ steps.release_version.outputs.version }}" `
             -Tag "${{ steps.release_tag.outputs.tag }}" `
-            -CommitSha "${{ github.sha }}"
+            -CommitSha "${{ github.sha }}" `
+            -OutputPath (Join-Path $env:RUNNER_TEMP "RELEASE_NOTES.md")
 
       - name: Upload workflow artifacts
         uses: actions/upload-artifact@v4
         with:
           name: pyanpm-windows-release-artifacts
-          path: .dist/releases/*
+          path: |
+            .dist/releases/pyanpm-cli-windows-x64-v${{ steps.release_version.outputs.version }}.zip
+            .dist/releases/pyanpm-companion-windows-x64-v${{ steps.release_version.outputs.version }}-setup.exe
+            .dist/releases/pyanpm-bundled-windows-x64-v${{ steps.release_version.outputs.version }}.zip
+            .dist/releases/SHA256SUMS.txt
           if-no-files-found: error
 
       - name: Publish GitHub release assets
@@ -190,5 +195,9 @@ jobs:
           tag_name: ${{ steps.release_tag.outputs.tag }}
           target_commitish: ${{ github.sha }}
           name: v${{ steps.release_version.outputs.version }}
-          body_path: .dist/releases/RELEASE_NOTES.md
-          files: .dist/releases/*
+          body_path: ${{ runner.temp }}/RELEASE_NOTES.md
+          files: |
+            .dist/releases/pyanpm-cli-windows-x64-v${{ steps.release_version.outputs.version }}.zip
+            .dist/releases/pyanpm-companion-windows-x64-v${{ steps.release_version.outputs.version }}-setup.exe
+            .dist/releases/pyanpm-bundled-windows-x64-v${{ steps.release_version.outputs.version }}.zip
+            .dist/releases/SHA256SUMS.txt
