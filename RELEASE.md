@@ -89,3 +89,4 @@ SHA256 example:
 
 ```powershell
 Get-FileHash .\pyanpm-cli-windows-x64-v0.1.0.zip -Algorithm SHA256
+```
