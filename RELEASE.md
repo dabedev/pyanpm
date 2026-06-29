@@ -11,20 +11,9 @@ The GitHub Actions `Release` workflow:
 3. Verifies that `src-tauri/tauri.conf.json` uses the same version.
 4. Runs the core Rust and desktop checks.
 5. Builds the CLI and the NSIS desktop installer.
-6. Authenticode-signs the Windows `.exe` files in CI.
-7. Packages release assets.
-8. Generates `SHA256SUMS.txt` and the GitHub Release description.
-9. Publishes a GitHub Release and uploads only the intended release assets automatically.
-
-## Required GitHub Secrets
-
-The release workflow expects these repository secrets:
-
-- `WINDOWS_SIGNING_CERTIFICATE_BASE64`: base64-encoded `.pfx` certificate for Authenticode signing
-- `WINDOWS_SIGNING_CERTIFICATE_PASSWORD`: password for the `.pfx`
-- `WINDOWS_SIGNING_TIMESTAMP_URL`: optional timestamp URL. If omitted, the workflow uses `http://timestamp.digicert.com`.
-
-If the signing secrets are missing, the release job fails instead of publishing unsigned `.exe` files.
+6. Packages release assets.
+7. Generates `SHA256SUMS.txt` and the GitHub Release description.
+8. Publishes a GitHub Release and uploads only the intended release assets automatically.
 
 ## Standard CI
 
@@ -95,18 +84,8 @@ The release description shown on GitHub is generated from `RELEASE_NOTES.md` con
 1. Download the asset and `SHA256SUMS.txt` from the same GitHub Release.
 2. Run a SHA256 check in PowerShell.
 3. Compare the result to the matching line in `SHA256SUMS.txt`.
-4. For `.exe` files, also verify the Authenticode signature.
 
 SHA256 example:
 
 ```powershell
 Get-FileHash .\pyanpm-cli-windows-x64-v0.1.0.zip -Algorithm SHA256
-```
-
-Signature example:
-
-```powershell
-Get-AuthenticodeSignature .\pyanpm-companion-windows-x64-v0.1.0-setup.exe | Format-List Status, StatusMessage, SignerCertificate, TimeStamperCertificate
-```
-
-`Status` should be `Valid`.

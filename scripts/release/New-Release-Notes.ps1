@@ -46,13 +46,11 @@ $bodyLines += @(
     "## Verify On Windows",
     "",
     "1. Download the asset you want and ``SHA256SUMS.txt`` from this release.",
-    "2. Run ``Get-FileHash .\\pyanpm-cli-windows-x64-v$Version.zip -Algorithm SHA256`` in PowerShell.",
+    "2. Run ``Get-FileHash .\\filename -Algorithm SHA256`` in PowerShell.",
     "3. Compare the reported hash with the matching line in ``SHA256SUMS.txt``.",
-    "4. For ``.exe`` files, run ``Get-AuthenticodeSignature .\\filename.exe | Format-List Status, StatusMessage, SignerCertificate, TimeStamperCertificate``.",
     "",
     "## Notes",
     "",
-    "- The ``.exe`` files in this release are Authenticode-signed in CI.",
     "- ``SHA256SUMS.txt`` lets you verify the downloaded bytes exactly."
 )
 
