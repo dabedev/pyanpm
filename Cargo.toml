@@ -1,14 +1,10 @@
 [workspace]
-members = [
-    "crates/pyanpm-cli",
-    "crates/pyanpm-core",
-    "src-tauri",
-]
+members = ["crates/pyanpm-cli", "crates/pyanpm-core", "src-tauri"]
 resolver = "2"
 
 [workspace.package]
 edition = "2024"
-version = "0.1.0"
+version = "0.0.1"
 license = "MIT"
 
 [workspace.dependencies]

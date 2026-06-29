@@ -17,6 +17,7 @@ permissions:
 jobs:
   windows-release:
     runs-on: windows-latest
+    timeout-minutes: 45
 
     steps:
       - name: Checkout
@@ -59,26 +60,32 @@ jobs:
 
           "tag=$tag" >> $env:GITHUB_OUTPUT
 
-      - name: Validate tag against Cargo version
+      - name: Validate release versions
         id: release_version
         shell: pwsh
         run: |
           $cargoToml = Get-Content -Path "Cargo.toml" -Raw
-          $match = [regex]::Match($cargoToml, '(?ms)^\[workspace\.package\].*?^version\s*=\s*"([^"]+)"')
+          $cargoMatch = [regex]::Match($cargoToml, '(?ms)^\[workspace\.package\].*?^version\s*=\s*"([^"]+)"')
 
-          if (-not $match.Success) {
+          if (-not $cargoMatch.Success) {
             throw "Could not find workspace.package version in Cargo.toml."
           }
 
-          $version = $match.Groups[1].Value
-          $expectedTag = "v$version"
+          $cargoVersion = $cargoMatch.Groups[1].Value
+          $tauriConfig = Get-Content -Path "src-tauri/tauri.conf.json" -Raw | ConvertFrom-Json
+          $tauriVersion = [string]$tauriConfig.version
+          $expectedTag = "v$cargoVersion"
           $actualTag = "${{ steps.release_tag.outputs.tag }}"
 
           if ($actualTag -ne $expectedTag) {
-            throw "Release tag '$actualTag' does not match Cargo workspace version '$version'. Expected tag: '$expectedTag'."
+            throw "Release tag '$actualTag' does not match Cargo workspace version '$cargoVersion'. Expected tag: '$expectedTag'."
           }
 
-          "version=$version" >> $env:GITHUB_OUTPUT
+          if ($tauriVersion -ne $cargoVersion) {
+            throw "Tauri version '$tauriVersion' does not match Cargo workspace version '$cargoVersion'."
+          }
+
+          "version=$cargoVersion" >> $env:GITHUB_OUTPUT
 
       - name: Install desktop dependencies
         run: pnpm install --frozen-lockfile
@@ -86,14 +93,89 @@ jobs:
       - name: Test core
         run: cargo test -p pyanpm-core
 
+      - name: Check workspace
+        run: cargo check --workspace
+
+      - name: Check desktop
+        run: pnpm run check
+
+      - name: Test desktop
+        run: pnpm run test
+
       - name: Build CLI release
         run: cargo build --release -p pyanpm-cli
 
       - name: Build Companion release
         run: pnpm run build:companion
 
+      - name: Sign Windows executables
+        shell: pwsh
+        env:
+          WINDOWS_SIGNING_CERTIFICATE_BASE64: ${{ secrets.WINDOWS_SIGNING_CERTIFICATE_BASE64 }}
+          WINDOWS_SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_SIGNING_CERTIFICATE_PASSWORD }}
+          WINDOWS_SIGNING_TIMESTAMP_URL: ${{ secrets.WINDOWS_SIGNING_TIMESTAMP_URL }}
+        run: |
+          if (-not $env:WINDOWS_SIGNING_CERTIFICATE_BASE64) {
+            throw "Missing secret WINDOWS_SIGNING_CERTIFICATE_BASE64."
+          }
+
+          if (-not $env:WINDOWS_SIGNING_CERTIFICATE_PASSWORD) {
+            throw "Missing secret WINDOWS_SIGNING_CERTIFICATE_PASSWORD."
+          }
+
+          $certificatePath = Join-Path $env:RUNNER_TEMP "pyanpm-codesign.pfx"
+          [System.IO.File]::WriteAllBytes(
+            $certificatePath,
+            [Convert]::FromBase64String($env:WINDOWS_SIGNING_CERTIFICATE_BASE64)
+          )
+
+          $certificate = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new()
+          $certificate.Import(
+            $certificatePath,
+            $env:WINDOWS_SIGNING_CERTIFICATE_PASSWORD,
+            [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable -bor
+            [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::PersistKeySet
+          )
+
+          $timestampUrl = $env:WINDOWS_SIGNING_TIMESTAMP_URL
+          if (-not $timestampUrl) {
+            $timestampUrl = "http://timestamp.digicert.com"
+          }
+
+          $targets = @(
+            (Resolve-Path "target/release/pyanpm.exe").Path
+          )
+
+          $installer = Get-ChildItem -Path "target/release/bundle/nsis", "src-tauri/target/release/bundle/nsis" -Filter *.exe -File -Recurse -ErrorAction SilentlyContinue |
+            Sort-Object LastWriteTimeUtc -Descending |
+            Select-Object -First 1
+
+          if (-not $installer) {
+            throw "Could not find the built NSIS installer to sign."
+          }
+
+          $targets += $installer.FullName
+
+          foreach ($target in $targets) {
+            $signature = Set-AuthenticodeSignature -FilePath $target -Certificate $certificate -HashAlgorithm SHA256 -TimestampServer $timestampUrl
+
+            if ($signature.Status -ne "Valid") {
+              throw "Signing failed for '$target'. Status: $($signature.Status). $($signature.StatusMessage)"
+            }
+          }
+
       - name: Package release artifacts
-        run: pnpm run release:artifacts
+        shell: pwsh
+        run: |
+          powershell -ExecutionPolicy Bypass -File ./scripts/release/Create-Release-Artifacts.ps1 -CommitSha "${{ github.sha }}"
+
+      - name: Generate release notes
+        shell: pwsh
+        run: |
+          powershell -ExecutionPolicy Bypass -File ./scripts/release/New-Release-Notes.ps1 `
+            -Version "${{ steps.release_version.outputs.version }}" `
+            -Tag "${{ steps.release_tag.outputs.tag }}" `
+            -CommitSha "${{ github.sha }}"
 
       - name: Upload workflow artifacts
         uses: actions/upload-artifact@v4
@@ -108,5 +190,5 @@ jobs:
           tag_name: ${{ steps.release_tag.outputs.tag }}
           target_commitish: ${{ github.sha }}
           name: v${{ steps.release_version.outputs.version }}
-          generate_release_notes: true
+          body_path: .dist/releases/RELEASE_NOTES.md
           files: .dist/releases/*

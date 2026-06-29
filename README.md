@@ -13,15 +13,68 @@ The desktop app is an optional companion for browsing state, running checks, and
 - `Companion App`: the optional desktop companion
 - `Bundled CLI + Companion`: both together in one download
 
-## Release Automation
+Every GitHub Release also includes:
 
-GitHub Actions builds Windows release artifacts.
+- `SHA256SUMS.txt` for download verification
+- `RELEASE-METADATA.txt` with the exact commit SHA
+- `RELEASE_NOTES.md` with the release summary and Windows verification steps
 
-- `CI` runs on pushes and pull requests.
-- `Release` runs on version tags like `v0.1.0` and uploads:
-  - CLI
-  - Companion App
-  - Bundled CLI + Companion
+The workflow signs the Windows `.exe` files before publishing them.
+
+## CI
+
+GitHub Actions runs `CI` automatically on every push to `main` and on every pull request.
+
+The CI workflow runs the same main checks you should run locally before pushing:
+
+```powershell
+pnpm install --frozen-lockfile
+cargo test -p pyanpm-core
+cargo check --workspace
+pnpm run check
+pnpm run test
+pnpm run build
+pnpm run build:companion
+```
+
+## Publish A Release
+
+The `Release` workflow publishes a GitHub Release automatically when you push a version tag like `v0.1.0`.
+
+1. Update the version in `Cargo.toml`.
+2. Update the version in `src-tauri/tauri.conf.json` to match.
+3. Commit the version change.
+4. Create and push the tag:
+
+```powershell
+git tag v0.1.0
+git push origin main
+git push origin v0.1.0
+```
+
+You can also run the workflow manually from the GitHub Actions page with `workflow_dispatch`, but the tag still has to exist and match the versions in the repo.
+
+More maintainer setup details are in `RELEASE.md`.
+
+## Verify A Download On Windows
+
+Download the asset you want and `SHA256SUMS.txt` from the same GitHub Release.
+
+Check the SHA256 hash in PowerShell:
+
+```powershell
+Get-FileHash .\pyanpm-cli-windows-x64-v0.1.0.zip -Algorithm SHA256
+```
+
+Compare the reported hash with the matching line in `SHA256SUMS.txt`.
+
+Check the signature on an `.exe` asset in PowerShell:
+
+```powershell
+Get-AuthenticodeSignature .\pyanpm-companion-windows-x64-v0.1.0-setup.exe | Format-List Status, StatusMessage, SignerCertificate, TimeStamperCertificate
+```
+
+`Status` should be `Valid`.
 
 ## What It Manages
 

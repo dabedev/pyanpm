@@ -11,7 +11,7 @@
 ## Documentation Rules
 
 - Store project documents under `.trae/documents/pyanpm/`.
-- Keep user-facing project documents such as `README.md` and `TODO.md` in the project root when they describe the overall `pyanpm` project.
+- Keep user-facing project documents such as `README.md`, `RELEASE.md`, and `TODO.md` in the project root when they describe the overall `pyanpm` project.
 - Keep specifications, plans, and architecture notes as Markdown files.
 - When an attached or pasted spec has encoding damage, preserve the intended content and rewrite broken diagrams or formatting cleanly.
 

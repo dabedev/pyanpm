@@ -1,9 +1,10 @@
-$ErrorActionPreference = "Stop"
-
 param(
-    [string]$RepoRoot = "",
-    [string]$OutputDir = ""
+    [string]$RepoRoot,
+    [string]$OutputDir,
+    [string]$CommitSha
 )
+
+$ErrorActionPreference = "Stop"
 
 if (-not $RepoRoot) {
     $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
@@ -11,6 +12,10 @@ if (-not $RepoRoot) {
 
 if (-not $OutputDir) {
     $OutputDir = Join-Path $RepoRoot ".dist\releases"
+}
+
+if (-not $CommitSha) {
+    $CommitSha = ""
 }
 
 function Get-PyanpmVersion {
@@ -48,6 +53,24 @@ function Resolve-CompanionInstaller {
     }
 
     throw "Could not find a built companion installer under the Tauri bundle output."
+}
+
+function Write-Sha256Manifest {
+    param(
+        [string]$ArtifactDir,
+        [string]$ManifestPath
+    )
+
+    $artifacts = Get-ChildItem -Path $ArtifactDir -File |
+        Where-Object { $_.Name -ne (Split-Path $ManifestPath -Leaf) } |
+        Sort-Object Name
+
+    $lines = foreach ($artifact in $artifacts) {
+        $hash = Get-FileHash -Path $artifact.FullName -Algorithm SHA256
+        "{0} *{1}" -f $hash.Hash.ToLowerInvariant(), $artifact.Name
+    }
+
+    Set-Content -Path $ManifestPath -Value $lines
 }
 
 $version = Get-PyanpmVersion -CargoTomlPath (Join-Path $RepoRoot "Cargo.toml")
@@ -102,8 +125,20 @@ if (Test-Path $bundleArchive) {
 }
 Compress-Archive -Path (Join-Path $bundleStage "*") -DestinationPath $bundleArchive
 
+$releaseMetadataPath = Join-Path $OutputDir "RELEASE-METADATA.txt"
+@"
+version=$version
+commit_sha=$CommitSha
+generated_at_utc=$([DateTime]::UtcNow.ToString("o"))
+"@ | Set-Content -Path $releaseMetadataPath
+
+$shaManifestPath = Join-Path $OutputDir "SHA256SUMS.txt"
+Write-Sha256Manifest -ArtifactDir $OutputDir -ManifestPath $shaManifestPath
+
 Remove-Item -Path $tempRoot -Recurse -Force
 
 Write-Host "CLI artifact: $cliArchive"
 Write-Host "Companion artifact: $companionArtifact"
 Write-Host "Bundled artifact: $bundleArchive"
+Write-Host "Release metadata: $releaseMetadataPath"
+Write-Host "SHA256 manifest: $shaManifestPath"
